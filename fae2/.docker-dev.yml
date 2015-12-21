@@ -1,0 +1,61 @@
+# specify the .docker-dev.yml file format version
+docker-dev:
+  version: 1.0.0
+
+# specify project type
+project:
+  type: unknown
+
+# 'name' is the preferred docker-machine instance to use for this project.
+# If 'ssh-agent-forwarding' is true then the proxied commands and 'docker-dev bash'
+# command will automagically forward ssh key authorization back to your host
+# OS so that you won't need to worry about copying your private keys into the
+# docker images and won't have to enter the passwords to unlock the keys on 
+# each use.
+# If 'disable_host_key_checking' is true then a modified version of the 
+# image identified in docker-compose.yml will be created for use with proxied 
+# commands which basically just adds the following to the image's ~/.ssh/config:
+# 
+#   Host *
+#      StrictHostKeyChecking no
+#      UserKnownHostsFile=/dev/null
+# 
+docker-machine:
+  name: default
+  ssh-agent-forwarding: true
+  disable_host_key_checking: true
+
+# this is used to determine if the container <service> is running
+docker-compose:
+  service: unknown
+
+# This list of commands will be proxied to run within the docker service
+# container.  These will be (re)created when 'docker-dev init' is ran.  They will
+# only be proxied while in the project directory tree.  After 'docker-dev init',
+# you must 'cd' into the project directory -or- execute 'cd .' to activate.
+proxied_commands:
+#- npm
+#- bower
+#- ember
+
+# Define the browser and url to open after 'docker-dev start' command.
+# Note that '{{docker-machine ip}}' tag in 'url' will be dynamically replaced.
+browser:
+  path: /Applications/Google Chrome.app
+  url: http://{{docker-machine ip}}/
+
+# If watchman is installed on your host OS and enabled below then the
+# 'docker-dev.rb touch' script will be ran to invoke a touch within the
+# container to trigger a rebuild of modified files by the container.
+# The 'directories' list identifies which directories will be watched
+# for file changes.
+watchman:
+  enabled: false
+#  directories:
+#  - app/*
+#  - test/*
+#  triggers:
+#  - command: docker-dev touch  # modify add_watchman_trigger to use this
+#    directories:
+#    - app/*
+#    - test/*

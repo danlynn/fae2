@@ -1,0 +1,35 @@
+# specify the .docker-dev.yml file format version
+docker-dev:
+  version: 1.0.0
+
+# specify project type
+project:
+  type: django
+
+# this is used to determine if the container <service> is running
+docker-compose:
+  service: server
+
+# This list of commands will be proxied to run within the docker service
+# container.  These will be (re)created when 'docker-dev init' is ran.  They will
+# only be proxied while in the project directory tree.  After 'docker-dev init',
+# you must 'cd' into the project directory -or- execute 'cd .' to activate.
+proxied_commands:
+- python
+- django-admin
+- pip
+
+# Define the browser and url to open after 'docker-dev start' command.
+# Note that '{{docker-machine ip}}' tag in 'url' will be dynamically replaced.
+browser:
+  url: http://{{docker-machine ip}}:8000/
+
+# If watchman is installed on your host OS and enabled below then the
+# 'docker-dev.rb touch' script will be ran to invoke a touch within the
+# container to trigger a rebuild of modified files by the container.
+# The 'directories' list identifies which directories will be watched
+# for file changes.
+watchman:
+  enabled: true
+  directories:
+  - mysite

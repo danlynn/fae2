@@ -1,0 +1,15 @@
+server:
+  build: .
+  # image: django-tutorial # docker build -t django-tutorial .
+  # image: django:python3-onbuild
+  volumes:
+    - .:/usr/src/app
+    # - site-packages:/usr/local/lib/python3.4/site-packages
+    # - ./.docker-volumes/site-packages:/usr/local/lib/python3.4/site-packages
+    # - /usr/local/lib/site-python
+    # - ../requirements.txt:/usr/src/app/requirements.txt
+  # django dev server port = 8000
+  working_dir: /usr/src/app
+  ports:
+    - "8000:8000"
+  command: python manage.py runserver 0.0.0.0:8000
