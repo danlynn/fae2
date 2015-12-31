@@ -12,8 +12,6 @@ server:
   working_dir: /usr/src/app
   ports:
     - "8000:8000"
-  environment:
-    FAE_HOME: /usr/src/app/fae-util
   command: python manage.py runserver 0.0.0.0:8000
   links:
     - database
