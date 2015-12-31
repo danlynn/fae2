@@ -11,4 +11,5 @@ else
 fi
 
 . $FAE_HOME/org/fae/util/classpath
-javac $FAE_HOME/org/fae/util/FaeUtil.java
+#javac $FAE_HOME/org/fae/util/FaeUtil.java
+javac $FAE_HOME/org/fae/util/*.java
