@@ -12,4 +12,39 @@ server:
   working_dir: /usr/src/app
   ports:
     - "8000:8000"
+  environment:
+    FAE_HOME: /usr/src/app/fae-util
   command: python manage.py runserver 0.0.0.0:8000
+  links:
+    - database
+
+database:
+  image: postgres:9.4.5
+  ports:
+    - "5432:5432"
+  environment:
+    POSTGRES_PASSWORD: password
+
+# Initialize database via:  (password = 'password')
+#   $ psql -h database -U postgres
+#   postgres=# CREATE DATABASE fae2;
+#   postgres=# \q
+# 
+# Migrate tables via:
+#   $ python manage.py migrate
+# 
+# Populate tables via:
+#   $ cd /usr/src/app/populate
+#   $ python pop_all.py
+bash:
+  build: .
+  volumes:
+    - .:/usr/src/app
+  working_dir: /usr/src/app
+  ports:
+    - "8000:8000"
+  environment:
+    FAE_HOME: /usr/src/app/fae-util
+  command: bash
+  links:
+    - database
