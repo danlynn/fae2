@@ -32,4 +32,4 @@ browser:
 watchman:
   enabled: true
   directories:
-  - mysite
+  - /usr/src/app
