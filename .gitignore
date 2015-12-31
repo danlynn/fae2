@@ -3,3 +3,4 @@ fae2/fae2/secrets.json
 fae2/db.sqlite3
 __pycache__
 .idea
+*.class
