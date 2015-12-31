@@ -115,8 +115,8 @@ WSGI_APPLICATION = 'fae2.wsgi.application'
 
 DATABASES = {
     'default': {
-          # 'ENGINE' : 'django.db.backends.postgresql_psycopg2', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-          'ENGINE' : 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
+          'ENGINE' : 'django.db.backends.postgresql_psycopg2', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
+          # 'ENGINE' : 'django.db.backends.mysql', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
             'NAME' : get_secret('DATABASE_NAME'),              # Or path to database file if using sqlite3.
             'USER' : get_secret('DATABASE_USER'),              # Not used with sqlite3.
         'PASSWORD' : get_secret('DATABASE_PASSWORD'),          # Not used with sqlite3.
@@ -148,7 +148,12 @@ STATIC_URL = '/static/'
 STATIC_ROOT = join(BASE_DIR, STATIC_URL)
 
 STATICFILES_DIRS = (
-  join(APP_DIR, "fae2/static"),
+  # join(APP_DIR, "fae2/static"),
+  "/usr/src/app/static",
 )
+
+print('STATIC_URL = ' + STATIC_URL)
+print('STATIC_ROOT = ' + STATIC_ROOT)
+print('STATICFILES_DIRS = ' + ', '.join(STATICFILES_DIRS))
 
 LOGIN_REDIRECT_URL='/'
