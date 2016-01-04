@@ -1,3 +1,5 @@
+# note that working dir must be fae-util to run this script
+
 import sys
 import os
 import string
@@ -16,7 +18,7 @@ import urllib
 import cmd
 import django
 
-sys.path.append(os.path.abspath('.'))
+sys.path.append(os.path.abspath('..'))
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'fae2.settings')
 django.setup()
@@ -123,7 +125,7 @@ def analyzeWebsiteReport(ws_report):
   start = time.time()
 
   cmd = []
-  cmd.append(os.path.abspath('.') + '/fae-util/run')
+  cmd.append(os.path.abspath('.') + '/run')
 
   cmd.append('-c')
   cmd.append(DATA_DIR_PREFIX + ws_report.data_property_file)
