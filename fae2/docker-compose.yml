@@ -1,5 +1,5 @@
 server:
-  build: .
+  image: django:python3-onbuild
   # image: django-tutorial # docker build -t django-tutorial .
   # image: django:python3-onbuild
   volumes:
@@ -38,6 +38,7 @@ bash:
   build: .
   volumes:
     - .:/usr/src/app
+    - ../data:/usr/src/data
   working_dir: /usr/src/app
   ports:
     - "8000:8000"
