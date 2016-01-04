@@ -12,7 +12,7 @@ from django.views.generic import RedirectView
 from django.contrib.auth.models import User
 
 from reports.models import WebsiteReport
-from django.core.urlresolvers import reverse_lazy
+from django.core.urlresolvers import reverse_lazy, reverse
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .uid import generate
 
@@ -45,14 +45,12 @@ class ProcessingAnonymousReportView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super(ProcessingAnonymousReportView, self).get_context_data(**kwargs)
 
-        anonymous_reports =  WebsiteReport.objects.filter(user=User.objects.get(username='anonymous'))
         try:
-          anonymous_report  = WebsiteReport.objects.get(slug=self.request.session['fae2_anonymous_slug'])
+          report  = WebsiteReport.objects.get(slug=self.request.session['fae2_anonymous_slug'])
         except:
-          anonymous_report = False
+          report = False
 
-        context['reports'] = anonymous_reports.exclude(status='A').exclude(status='E')
-        context['errors'] = anonymous_reports.filter(status='E')
+        context['report'] = report
         
         return context    
 
@@ -64,7 +62,7 @@ class ProcessingAnonymousReportView(TemplateView):
 
 class RunReportView(LoginRequiredMixin, CreateView):
     model = WebsiteReport
-    fields = ['url', 'title', 'depth', 'follow', 'ruleset']
+    fields = ['url', 'title', 'depth', 'follow', 'ruleset', 'max_pages']
     template_name = 'reports/run_report.html'
 
     success_url = reverse_lazy('processing_reports')
@@ -77,6 +75,10 @@ class RunReportView(LoginRequiredMixin, CreateView):
         form.instance.slug = generate()
 
         return super(RunReportView, self).form_valid(form)
+
+    def form_invalid(self, form):
+
+        return super(RunReportView, self).form_invalid(form)
 
 class ProcessingReportView(LoginRequiredMixin, TemplateView):
     template_name = 'reports/processing.html'
@@ -152,31 +154,12 @@ class ManageReportView(LoginRequiredMixin, TemplateView):
         
         return context                 
 
-class LastReportView(LoginRequiredMixin, TemplateView):
-    template_name = 'reports/report.html'
 
-    def get_context_data(self, **kwargs):
-        context = super(LastReportView, self).get_context_data(**kwargs)
-
-        view = 'rc'
-
-        report = WebsiteReport.objects.last()
-
-        if view == 'gl':
-          groups = report.ws_gl_results.all()
-        elif view == 'rs':  
-          groups = report.ws_rs_results.all()
-        else:  
-          groups = report.ws_rc_results.all()
-          view = 'rc'
-
-        context['report']   = report
-        context['view']     = view
-        context['summary']  = report
-        context['groups']   = groups
-        
-        return context                      
-
+# ==============================================================
+#
+# Report Views
+#
+# ==============================================================
 
 class ReportView(TemplateView):
     template_name = 'reports/report.html'
@@ -187,15 +170,31 @@ class ReportView(TemplateView):
         view = kwargs['view']
 
         report = WebsiteReport.objects.get(slug=kwargs['report'])
+        page = False
 
-        if view == 'gl':
-          groups = report.ws_gl_results.all()
-        elif view == 'rs':  
-          groups = report.ws_rs_results.all()
-        else:  
-          groups = report.ws_rc_results.all()
-          view = 'rc'
+        if report.page_count == 1:
+          page = report.get_first_page()
+          if view == 'gl':
+            groups = page.page_gl_results.all()
+          elif view == 'rs':  
+            groups = page.page_rs_results.all()
+          else:  
+            groups = page.page_rc_results.all()
+            view = 'rc'
+        else:
+          if view == 'gl':
+            groups = report.ws_gl_results.all()
+          elif view == 'rs':  
+            groups = report.ws_rs_results.all()
+          else:  
+            groups = report.ws_rc_results.all()
+            view = 'rc'
 
+        self.request.session['last_report_slug'] = report.slug
+        self.request.session['last_report_view'] = view
+        self.request.session['last_report_page_count'] = report.page_count
+
+        context['page']     = page
         context['report']   = report
         context['view']     = view
         context['summary']  = report
@@ -215,17 +214,25 @@ class ReportGroupView(TemplateView):
 
         report = WebsiteReport.objects.get(slug=kwargs['report'])
         if view == 'gl':
-          group = report.ws_gl_results.get(slug=kwargs['group'])
+          group        = report.ws_gl_results.get(slug=kwargs['group'])
+          page_results = group.page_gl_results.all()
         elif view == 'rs':  
-          group = report.ws_rs_results.get(slug=kwargs['group'])
+          group        = report.ws_rs_results.get(slug=kwargs['group'])
+          page_results = group.page_rs_results.all()
         else:  
-          group = report.ws_rc_results.get(slug=kwargs['group'])
+          group        = report.ws_rc_results.get(slug=kwargs['group'])
+          page_results = group.page_rc_results.all()
           view = 'rc'
 
-        context['report']  = report
-        context['view']    = view
-        context['summary'] = group
-        context['group']   = group
+        self.request.session['last_report_slug'] = report.slug
+        self.request.session['last_report_view'] = view
+        self.request.session['last_report_page_count'] = report.page_count
+
+        context['report']       = report
+        context['view']         = view
+        context['summary']      = group
+        context['group']        = group
+        context['page_results'] = page_results
         
         return context            
 
@@ -247,6 +254,10 @@ class ReportGroupRuleView(TemplateView):
           view = 'rc'
 
         ws_rule_result = group.ws_rule_results.get(slug=kwargs['rule'])
+
+        self.request.session['last_report_slug'] = report.slug
+        self.request.session['last_report_view'] = view
+        self.request.session['last_report_page_count'] = report.page_count
 
         context['report']           = report
         context['view']             = view
@@ -277,6 +288,10 @@ class ReportGroupRulePageView(TemplateView):
         ws_rule_result   = group.ws_rule_results.get(slug=kwargs['rule'])
         page_rule_result = ws_rule_result.page_rule_results.get(page_result__page_number=kwargs['page'])
 
+        self.request.session['last_report_slug'] = report.slug
+        self.request.session['last_report_view'] = view
+        self.request.session['last_report_page_count'] = report.page_count
+
         context['report']   = report
         context['view']     = view
         context['group']    = group
@@ -305,6 +320,10 @@ class ReportGroupRulePageElementResultsJSON(TemplateView):
         ws_rule_result   = group.ws_rule_results.get(slug=kwargs['rule'])
         page_rule_result = ws_rule_result.page_rule_results.get(page_result__page_number=kwargs['page'])
 
+        self.request.session['last_report_slug'] = report.slug
+        self.request.session['last_report_view'] = view
+        self.request.session['last_report_page_count'] = report.page_count
+
         context['report']   = report
         context['view']     = view
         context['group']    = group
@@ -313,6 +332,41 @@ class ReportGroupRulePageElementResultsJSON(TemplateView):
         context['result_messages']   = page_rule_result.result_message.split(';')        
         return context    
 
+class ReportAllPagesView(TemplateView):
+    template_name = 'reports/report_all_pages.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(ReportAllPagesView, self).get_context_data(**kwargs)
+
+        view = kwargs['view']
+
+        report = WebsiteReport.objects.get(slug=kwargs['report'])
+        page = False
+        groups = []
+
+        if report.page_count == 1:
+          page = report.get_first_page()
+          if view == 'gl':
+            groups = page.page_gl_results.all()
+          elif view == 'rs':  
+            groups = page.page_rs_results.all()
+          else:  
+            groups = page.page_rc_results.all()
+            view = 'rc'
+
+        self.request.session['last_report_slug'] = report.slug
+        self.request.session['last_report_view'] = view
+        self.request.session['last_report_page_count'] = report.page_count
+
+        context['page']     = page
+        context['report']   = report
+        context['view']     = view
+        context['summary']  = report
+        context['groups']   = groups
+        
+        return context            
+
+        
 class ReportPageView(TemplateView):
     template_name = 'reports/report_page.html'
 
@@ -332,6 +386,23 @@ class ReportPageView(TemplateView):
           groups = page.page_rc_results.all()
           view_opt = 'rc'
 
+        report.update_last_page_numbers(page.page_number)
+
+        self.request.session['last_report_slug'] = report.slug
+        self.request.session['last_report_view'] = view
+        self.request.session['last_report_page_count'] = report.page_count
+
+        self.request.session['last_page_number']   = report.last_page
+        self.request.session['last_prev_page_url'] = ""
+        self.request.session['last_next_page_url'] = ""
+
+        if report.last_prev_page > 0:
+            self.request.session['last_prev_page_url'] = reverse('show_report_page', args=[report.slug, view, report.last_prev_page])
+
+        if report.last_next_page > 0:
+            self.request.session['last_next_page_url'] = reverse('show_report_page', args=[report.slug, view, report.last_next_page])
+
+        report.update_last_page_urls(self.request.session['last_prev_page_url'], self.request.session['last_next_page_url'])
 
         context['report']        = report
         context['view']          = view
@@ -349,16 +420,37 @@ class ReportPageGroupView(TemplateView):
         context = super(ReportPageGroupView, self).get_context_data(**kwargs)
 
         view = kwargs['view']
+        group_slug = kwargs['group']
 
         report = WebsiteReport.objects.get(slug=kwargs['report'])
         page   = report.page_all_results.get(page_number=kwargs['page'])
         if view == 'gl':
-          group = page.page_gl_results.get(slug=kwargs['group'])
+          group = page.page_gl_results.get(slug=group_slug)
         elif view == 'rs':  
-          group = page.page_rs_results.get(slug=kwargs['group'])
+          group = page.page_rs_results.get(slug=group_slug)
         else:  
-          group = page.page_rc_results.get(slug=kwargs['group'])
+          group = page.page_rc_results.get(slug=group_slug)
           view_opt = 'rc'
+
+
+        self.request.session['last_report_slug'] = report.slug
+        self.request.session['last_report_view'] = view
+        self.request.session['last_report_page_count'] = report.page_count
+
+        report.update_last_page_numbers(page.page_number)
+
+        self.request.session['last_page_number']   = report.last_page
+        self.request.session['last_prev_page_url'] = ""
+        self.request.session['last_next_page_url'] = ""
+
+        if report.last_prev_page > 0:
+            self.request.session['last_prev_page_url'] = reverse('show_report_page_group', args=[report.slug, view, report.last_prev_page, group_slug])
+
+        if report.last_next_page > 0:
+            self.request.session['last_next_page_url'] = reverse('show_report_page_group', args=[report.slug, view, report.last_next_page, group_slug])
+
+        report.update_last_page_urls(self.request.session['last_prev_page_url'], self.request.session['last_next_page_url'])
+
 
         context['report']   = report
         context['view']     = view
@@ -375,18 +467,38 @@ class ReportPageGroupRuleView(TemplateView):
         context = super(ReportPageGroupRuleView, self).get_context_data(**kwargs)
 
         view = kwargs['view']
+        group_slug = kwargs['group']
+        rule_slug  = kwargs['rule']
 
         report = WebsiteReport.objects.get(slug=kwargs['report'])
         page   = report.page_all_results.get(page_number=kwargs['page'])
         if view == 'gl':
-          group = page.page_gl_results.get(slug=kwargs['group'])
+          group = page.page_gl_results.get(slug=group_slug)
         elif view == 'rs':  
-          group = page.page_rs_results.get(slug=kwargs['group'])
+          group = page.page_rs_results.get(slug=group_slug)
         else:  
-          group = page.page_rc_results.get(slug=kwargs['group'])
+          group = page.page_rc_results.get(slug=group_slug)
           view_opt = 'rc'
 
-        page_rule_result = group.page_rule_results.get(slug=kwargs['rule'])
+        page_rule_result = group.page_rule_results.get(slug=rule_slug)
+
+        self.request.session['last_report_slug'] = report.slug
+        self.request.session['last_report_view'] = view
+        self.request.session['last_report_page_count'] = report.page_count
+
+        report.update_last_page_numbers(page.page_number)
+
+        self.request.session['last_page_number']   = report.last_page
+        self.request.session['last_prev_page_url'] = ""
+        self.request.session['last_next_page_url'] = ""
+
+        if report.last_prev_page > 0:
+            self.request.session['last_prev_page_url'] = reverse('show_report_page_group_rule', args=[report.slug, view, report.last_prev_page, group_slug, rule_slug])
+
+        if report.last_next_page > 0:
+            self.request.session['last_next_page_url'] = reverse('show_report_page_group_rule', args=[report.slug, view, report.last_next_page, group_slug, rule_slug])
+
+        report.update_last_page_urls(self.request.session['last_prev_page_url'], self.request.session['last_next_page_url'])        
 
         context['report']        = report
         context['view']          = view
