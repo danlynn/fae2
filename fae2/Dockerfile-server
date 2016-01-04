@@ -1,0 +1,3 @@
+FROM django:python3-onbuild
+
+MAINTAINER Dan Lynn <docker@danlynn.org>

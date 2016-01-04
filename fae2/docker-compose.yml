@@ -1,5 +1,6 @@
 server:
-  image: django:python3-onbuild
+  build: .
+  dockerfile: Dockerfile-server
   # image: django-tutorial # docker build -t django-tutorial .
   # image: django:python3-onbuild
   volumes:
@@ -23,10 +24,44 @@ database:
   environment:
     POSTGRES_PASSWORD: password
 
+processor:
+  build: .
+  dockerfile: Dockerfile-processor
+  volumes:
+    - .:/usr/src/app
+    - ../data:/usr/src/data
+  working_dir: /usr/src/app/fae-util
+  environment:
+    FAE_HOME: /usr/src/app/fae-util
+  command: python fae-util.py
+  links:
+    - database
+
+
+# To be able to run django server:
+#   $ docker-compose run -p 8000:8000 processor bash
+# 
+# To be able to run bash without exposing django server ports:
+#   $ docker-compose run processor bash
+#
+
+
 # Initialize database via:  (password = 'password')
 #   $ psql -h database -U postgres
 #   postgres=# CREATE DATABASE fae2;
 #   postgres=# \q
+# 
+#   switch to fae2 db:
+#     postgres=# \c fae2
+# 
+#   list tables:
+#     postgres=# \l
+# 
+#   display table schema:
+#     postgres=# \d tablename
+#
+#   determine if tables have been populated (should show 2 rows):
+#     postgres=# select * from auth_user;
 # 
 # Migrate tables via:
 #   $ python manage.py migrate
@@ -34,16 +69,24 @@ database:
 # Populate tables via:
 #   $ cd /usr/src/app/populate
 #   $ python pop_all.py
-bash:
-  build: .
-  volumes:
-    - .:/usr/src/app
-    - ../data:/usr/src/data
-  working_dir: /usr/src/app
-  ports:
-    - "8000:8000"
-  environment:
-    FAE_HOME: /usr/src/app/fae-util
-  command: bash
-  links:
-    - database
+# 
+# webapp accounts (defaults):
+#   username    password
+#   jongund     abc
+#   anonymous   GhE6*2@Vd
+# 
+
+
+# bash:
+#   build: .
+#   volumes:
+#     - .:/usr/src/app
+#     - ../data:/usr/src/data
+#   working_dir: /usr/src/app
+#   ports:
+#     - "8000:8000"
+#   environment:
+#     FAE_HOME: /usr/src/app/fae-util
+#   command: bash
+#   links:
+#     - database
