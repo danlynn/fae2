@@ -2,6 +2,9 @@
 
 [ -z "$FAE_HOME" ] && FAE_HOME="."
 
+echo 'Recompiling fae2-util java source...'
+echo ''
+
 if env | grep -q ^FAE_HOME=
 then
   echo env FAE_HOME is already exported
@@ -11,5 +14,4 @@ else
 fi
 
 . $FAE_HOME/org/fae/util/classpath
-#javac $FAE_HOME/org/fae/util/FaeUtil.java
 javac $FAE_HOME/org/fae/util/*.java
