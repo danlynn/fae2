@@ -13,7 +13,7 @@ server:
   working_dir: /usr/src/app
   ports:
     - "8000:8000"
-  command: python manage.py runserver 0.0.0.0:8000
+  command: ./build_and_run_server.sh
   links:
     - database
 
@@ -30,10 +30,9 @@ processor:
   volumes:
     - .:/usr/src/app
     - ../data:/usr/src/data
-  working_dir: /usr/src/app/fae-util
   environment:
     FAE_HOME: /usr/src/app/fae-util
-  command: python fae-util.py
+  command: ./build_and_run_processor.sh
   links:
     - database
 

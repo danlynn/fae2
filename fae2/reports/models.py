@@ -114,10 +114,9 @@ WAIT_TIME_CHOICES = (
 
 MAX_PAGES_CHOICES = (
   (0,   ' All pages'),
-  (10,  ' 10 pages'),
-  (25,  ' 25 pages'),
-  (50,  ' 50 pages'),
-  (100,  ' 100 pages')
+  (5,   '   5 pages'),
+  (10,  '  10 pages'),
+  (25,  '  25 pages')
 )  
 
 # ---------------------------------------------------------------
@@ -134,12 +133,12 @@ class WebsiteReport(RuleGroupResult):
     
   slug  = models.SlugField(max_length=256, default="", blank=True, editable=False, unique=True)
 
-  title    = models.CharField("Title",  max_length=1024, default="no title", blank=False)
+  title    = models.CharField("Title",  max_length=1024, default="", blank=False)
   
   url      = models.URLField("URL",      max_length=1024, default="", blank=False)
   follow   = models.IntegerField("Follow Links in", choices=FOLLOW_CHOICES, default=1, blank=False)
   depth    = models.IntegerField("Depth of Evaluation", choices=DEPTH_CHOICES, default=2, blank=False)
-  max_pages  = models.IntegerField("Maxiumum Pages", choices=MAX_PAGES_CHOICES, default=0, blank=False)
+  max_pages  = models.IntegerField("Analyze Pages", choices=MAX_PAGES_CHOICES, default=0, blank=False)
   ruleset  = models.ForeignKey(Ruleset, default=2, blank=False)
 
   browser_emulation    = models.CharField("Browser Emulation", max_length=32, default="FIREFOX")
@@ -157,11 +156,20 @@ class WebsiteReport(RuleGroupResult):
 
   archive  = models.BooleanField(default=False)
   stats    = models.BooleanField(default=False)
+
+  # Report History Information
+  
+  last_viewed  = models.DateTimeField(auto_now=True, editable=False)
+  last_view    = models.CharField('Last View', max_length=4, default="rc")
+  last_page    = models.IntegerField('Last Page Viewed', default=1)
+  last_next_page  = models.IntegerField('Next Page Number', default=0)
+  last_prev_page     = models.IntegerField('Previous Page Number', default=0)
+  last_next_page_url = models.URLField("Next Page URL",      max_length=1024, default="", blank=True)
+  last_prev_page_url = models.URLField("Previous Page URL",  max_length=1024, default="", blank=True)
   
   # fae-util and fae20 processing information
 
   created      = models.DateTimeField(auto_now_add=True, editable=False)
-  last_viewed  = models.DateTimeField(auto_now=True, editable=False)
   status       = models.CharField('Status',  max_length=10, choices=EVAL_STATUS, default='-')  
   
   # processining information    
@@ -189,8 +197,6 @@ class WebsiteReport(RuleGroupResult):
     return "Website Report: " + self.title
 
   def save(self):
-
-
 
     if len(self.data_dir_slug) == 0:
       DIR = ''
@@ -234,6 +240,9 @@ class WebsiteReport(RuleGroupResult):
     self.status = 'E'
     self.save()
 
+  def get_first_page(self):
+    return self.page_all_results.all()[0]
+
   def set_rule_numbers(self):
     ws_result = self.ws_all_results.last()
     num = 1
@@ -252,7 +261,11 @@ class WebsiteReport(RuleGroupResult):
     json['date']        = self.created
     json['ruleset']     = self.ruleset.title
     json['ruleset_url'] = reverse('ruleset', args=[self.ruleset.slug])
-    json['report_url']  = reverse('show_report',  args=[self.slug, 'rc'])
+    json['report_url']       = ""
+    json['report_Page_url']  = ""
+    if self.page_count > 0:
+      json['report_url']       = reverse('show_report',       args=[self.slug, 'rc'])
+      json['report_page_url']  = reverse('show_report_page',  args=[self.slug, 'rc', 1])
     json['depth']       = self.depth
     json['url']         = self.url
     json['pages']       = self.get_page_count()
@@ -315,7 +328,35 @@ class WebsiteReport(RuleGroupResult):
       pi.status = "file not found"  
     
     return pi
-     
+
+  def update_last_page_numbers(self, page_number):
+    self.last_page      = page_number
+    self.last_next_page = 0;
+    self.last_prev_page = 0
+
+    if page_number < self.page_count:
+      self.last_next_page  = page_number + 1
+
+    if page_number > 1:
+      self.last_prev_page  = page_number - 1
+
+    self.save()  
+
+  def update_last_page_urls(self, prev_url, next_url):
+    self.last_prev_page_url  = prev_url
+    self.last_next_page_url  = next_url
+
+    self.save()  
+
+  def broken_urls(self):
+    urls = []
+
+    for url in self.processed_urls.all():
+      if url.http_status_code != 200:
+        urls.append(url) 
+
+    return urls    
+
 
 # ---------------------------------------------------------------
 #
