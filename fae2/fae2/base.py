@@ -22,10 +22,7 @@ here = lambda *dirs: join(abspath(dirname(__file__)), *dirs)
 root = lambda *dirs: join(abspath(here("..","..")), *dirs)
 
 BASE_DIR = here("", "")
-print("BASE_DIR: " + BASE_DIR)
-
 APP_DIR  = root("")
-print(" APP_DIR: " + APP_DIR)
 
 
 # JSON-based secrets module
@@ -132,7 +129,7 @@ DATABASES = {
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'America/Chicago'
+TIME_ZONE = 'America/New_York'
 
 USE_I18N = True
 
@@ -152,8 +149,8 @@ STATICFILES_DIRS = (
   "/usr/src/app/static",
 )
 
-print('STATIC_URL = ' + STATIC_URL)
-print('STATIC_ROOT = ' + STATIC_ROOT)
-print('STATICFILES_DIRS = ' + ', '.join(STATICFILES_DIRS))
+# print('STATIC_URL = ' + STATIC_URL)
+# print('STATIC_ROOT = ' + STATIC_ROOT)
+# print('STATICFILES_DIRS = ' + ', '.join(STATICFILES_DIRS))
 
 LOGIN_REDIRECT_URL='/'
