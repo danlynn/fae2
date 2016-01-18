@@ -9,7 +9,8 @@ CLASSPATH=$CLASSPATH:$FAE_HOME/lib/log4j.jar
 
 CLASSPATH=$CLASSPATH:$CP/commons-cli-1.2.jar
 
-for f in $HP/*.jar; do echo "Adding $f to classpath"; CLASSPATH=$CLASSPATH:$f; done
+# for f in $HP/*.jar; do echo "Adding $f to classpath"; CLASSPATH=$CLASSPATH:$f; done
+for f in $HP/*.jar; do CLASSPATH=$CLASSPATH:$f; done
 
 export CLASSPATH
 
