@@ -69,6 +69,14 @@ processor:
 #   $ cd /usr/src/app/populate
 #   $ python pop_all.py
 # 
+# Manually invoke processor:
+#   $ docker-compose run processor bash
+#   $ cd fae-util/
+#   $ . ./org/fae/util/classpath
+#   $ ./build
+#   $ rm -r ../../data/jongund/report_00007/data
+#   $ java org.fae.util.FaeUtil -c ../../data/jongund/report_00007/report_00007.properties
+# 
 # webapp accounts (defaults):
 #   username    password
 #   jongund     abc
