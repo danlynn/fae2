@@ -1,28 +1,21 @@
-server:
-  build: .
-  dockerfile: Dockerfile-server
-  # image: django-tutorial # docker build -t django-tutorial .
-  # image: django:python3-onbuild
-  volumes:
-    - .:/usr/src/app
-    # - site-packages:/usr/local/lib/python3.4/site-packages
-    # - ./.docker-volumes/site-packages:/usr/local/lib/python3.4/site-packages
-    # - /usr/local/lib/site-python
-    # - ../requirements.txt:/usr/src/app/requirements.txt
-  # django dev server port = 8000
-  working_dir: /usr/src/app
-  ports:
-    - "8000:8000"
-  command: ./build_and_run_server.sh
-  links:
-    - database
-
 database:
   image: postgres:9.4.5
   ports:
     - "5432:5432"
   environment:
     POSTGRES_PASSWORD: password
+
+server:
+  build: .
+  dockerfile: Dockerfile-server
+  volumes:
+    - .:/usr/src/app
+  working_dir: /usr/src/app
+  ports:
+    - "8000:8000"
+  command: ./build_and_run_server.sh
+  links:
+    - database
 
 processor:
   build: .
@@ -35,65 +28,3 @@ processor:
   command: ./build_and_run_processor.sh
   links:
     - database
-
-
-# To be able to run django server:
-#   $ docker-compose run -p 8000:8000 processor bash
-# 
-# To be able to run bash without exposing django server ports:
-#   $ docker-compose run processor bash
-#
-
-
-# Initialize database via:  (password = 'password')
-#   $ psql -h database -U postgres
-#   postgres=# CREATE DATABASE fae2;
-#   postgres=# \q
-# 
-#   switch to fae2 db:
-#     postgres=# \c fae2
-# 
-#   list tables:
-#     postgres=# \l
-# 
-#   display table schema:
-#     postgres=# \d tablename
-#
-#   determine if tables have been populated (should show 2 rows):
-#     postgres=# select * from auth_user;
-# 
-# Migrate tables via:
-#   $ python manage.py migrate
-# 
-# Populate tables via:
-#   $ cd /usr/src/app/populate
-#   $ python pop_all.py
-# 
-# Manually invoke processor:
-#   $ docker-compose run processor bash
-#   $ cd fae-util/
-#   $ . ./org/fae/util/classpath
-#   $ ./build
-#   $ rm -r ../../data/jongund/report_00007/data
-#   $ java org.fae.util.FaeUtil -c ../../data/jongund/report_00007/report_00007.properties
-# 
-# webapp accounts (defaults):
-#   username    password
-#   jongund     abc
-#   anonymous   GhE6*2@Vd
-# 
-
-
-# bash:
-#   build: .
-#   volumes:
-#     - .:/usr/src/app
-#     - ../data:/usr/src/data
-#   working_dir: /usr/src/app
-#   ports:
-#     - "8000:8000"
-#   environment:
-#     FAE_HOME: /usr/src/app/fae-util
-#   command: bash
-#   links:
-#     - database
