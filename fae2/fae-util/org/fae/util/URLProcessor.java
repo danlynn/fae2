@@ -412,7 +412,7 @@ public class URLProcessor {
             match = true;
             break;
           }
-          if (url.indexOf(tok + "/") != -1) {
+          if (url.indexOf(tok + "/") != -1) { // TODO: probably need to implement .*?://[a-zA-Z0-9.]*"+tok+"(?::\\d+)*(?:/.*|$) regex
             URL t = new URL(url);
             String prefix = t.getHost().substring(0, t.getHost().indexOf(tok));
             //System.out.println(prefix);
@@ -466,14 +466,17 @@ public class URLProcessor {
         StringTokenizer st = new StringTokenizer(faeUtil.m_ctrl.INCLUDE_DOMAINS, ",");
         while (st.hasMoreTokens()) {
           String tok = st.nextToken();
-          //System.out.println(tok);
-          if (url.indexOf("/" + tok + "/") != -1) {
+          System.out.println("    url regex match: \""+url+"\" =~ .*?://[a-zA-Z0-9.]*"+tok+"(?::\\d+)*(?:/.*|$) => " + url.matches(".*?://[a-zA-Z0-9.]*"+tok+"(?::\\d+)*(?:/.*|$)"));
+          if (url.matches(".*?://[a-zA-Z0-9.]*"+tok+"(?::\\d+)*(?:/.*|$)")) {
+            System.out.println("    match: " + tok + " => true");
             traverseIt = true;
             faeUtil.m_filteredURLs.remove(url);
             String timing = "\"" + url + "\",\"" + urlFrom + "\"";
             faeUtil.m_filteredURLsCSV.remove(timing);
             msg = urlNum + ":" + cnt + ": depth:" + depth + ": " + url + " MATCHES INCLUDE DOMAIN " + tok + ", PROCESSING";
           }
+          else
+            System.out.println("    match: " + tok + " => false");
         }
       }
 
@@ -484,7 +487,7 @@ public class URLProcessor {
         while (st.hasMoreTokens()) {
           String tok = st.nextToken();
           //System.out.println(tok);
-          if (url.indexOf("/" + tok + "/") != -1) {
+          if (url.matches(".*?://[a-zA-Z0-9.]*"+tok+"(?::\\d+)*(?:/.*|$)")) {
             traverseIt = false;
             faeUtil.m_filteredURLs.add(url);
             String timing = "\"" + url + "\",\"" + urlFrom + "\"";
@@ -964,9 +967,17 @@ public class URLProcessor {
               m_webClient.getOptions().setThrowExceptionOnScriptError(true);
               m_faeUtil.verbose("\t" + m_urlNum + ": Running evaluation scripts... ");
               startTime = System.currentTimeMillis();
-              ScriptResult result = page.executeJavaScript(m_faeUtil.m_evaluationScript);
+              ScriptResult result = null;
+              try {
+                result = page.executeJavaScript(m_faeUtil.m_evaluationScript);
+              }
+              catch (Exception e) {
+                result = new ScriptResult(null, page);
+                m_faeUtil.verbose("script evaluation failed: "+e);
+              }
               //System.out.println("result=>" + result);
               //System.out.println("result.getJavaScriptResult()=>" + result.getJavaScriptResult());
+              // if (result != null)
               m_faeUtil.verbose(result.getJavaScriptResult() == null ? "null" : result.getJavaScriptResult().toString());
               endTime = System.currentTimeMillis();
               m_scriptProcessingTime = endTime - startTime;
