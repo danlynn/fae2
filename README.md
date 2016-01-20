@@ -73,13 +73,11 @@ The following is a list of common tasks and how they are performed against the d
 + **Connect to database via command line:**
 
 	```
-	$ docker-compose run server bash
-	
-	root@749de25acfd0:/usr/src/app# psql -d fae2 -h database -U postgres
-	Password for user postgres: ********
+	$ docker-compose run server psql -d fae2 -h database -U postgres
+	Password for user postgres: 
 	psql (9.4.5)
 	Type "help" for help.
-
+	
 	fae2=# 
 	```
 	
