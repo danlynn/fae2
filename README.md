@@ -165,11 +165,9 @@ The following is a list of common tasks and how they are performed against the d
 
 + **Docker Toolbox:**
 
-	Docker Toolbox is a collection of docker tools that provide a complete environment for working with docker.
+	Docker Toolbox is a collection of docker tools that provide a complete environment for working with docker (including VirtualBox).
 	
 	[https://www.docker.com/docker-toolbox](https://www.docker.com/docker-toolbox)
-
-+ **VirtualBox**
 
 	These instructions assume you are using VirtualBox.  But, you can easily adapt to using an AWS container, or VMware, or whatever.
 
