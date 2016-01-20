@@ -9,6 +9,7 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -46,6 +47,7 @@ import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.DomNode;
 import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
 import com.gargoylesoftware.htmlunit.html.HtmlElement;
+import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
 /**
  * FaeUtil
@@ -851,8 +853,8 @@ class FaeUtil {
             continue;
           if (link.equals("/"))
             continue;
-          if (link.startsWith(".."))
-            continue;
+          // if (link.startsWith(".."))
+          //   continue;
           if (link.startsWith("#"))
             continue;
           if (link.startsWith("mailto"))
@@ -877,8 +879,21 @@ class FaeUtil {
             }
           }
           if (passes) {
-            if (!urls.contains(link))
+            System.out.println("===  found link: "+link);
+            HtmlPage page = (HtmlPage)parent.getPage();
+            try {
+              link = page.getFullyQualifiedUrl(link).toString();
+            }
+            catch (MalformedURLException e) {
+              System.out.println("=== could not fully qualify link: "+e);
+            }
+            if (!urls.contains(link)) {
+              System.out.println("=== adding link: "+link);
               urls.add(link);
+            }
+            else {
+              System.out.println("=== Skipping duplicate link: "+link);
+            }
           }
           else {
             debug("\tHREF attribute " + link + " ends with matching extension, skipping");
@@ -911,7 +926,7 @@ class FaeUtil {
       String filename = OUTPUT_DIRECTORY + FILESEP + basename;
       FileUtil.writeStringToFile(result.getJavaScriptResult() == null ? "result.getJavaScriptResult() == null" : result.getJavaScriptResult().toString(), filename);
       if(result.getJavaScriptResult()==null)
-    	  System.err.println("Script Error!");
+        System.err.println("Script Error!");
     }
   }
 
@@ -1121,10 +1136,10 @@ class FaeUtil {
   public static Controller m_ctrl = new Controller("java org.fae.util.FaeUtil <options>");
   
   public static BrowserVersion BROWSER_VERSION = BrowserVersion.FIREFOX_38;
-  public boolean DEBUG = false;
+  public boolean DEBUG = true;
   public int DEPTH = 1;
   public String OUTPUT_DIRECTORY;
-  public boolean VERBOSE = false;
+  public boolean VERBOSE = true;
   public long WAIT = 30000;
 
   public Hashtable<String, String> events = new Hashtable<String, String>();
