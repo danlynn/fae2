@@ -62,6 +62,14 @@ The 'data' directory in the project directory is mapped by the processor contain
 
 The following is a list of common tasks and how they are performed against the docker environment.
 
++ **Open bash shell in container**
+
+	```
+	$ docker-compose run server bash
+	```
+	
+	Note that 'server' is the name of the container that you want to open the bash shell within.  Any changes made while using this bash shell will be persisted and available to subsequent 'server' containers that are started.
+
 + **Connect to database via command line:**
 
 	```
@@ -77,7 +85,7 @@ The following is a list of common tasks and how they are performed against the d
 	
 	Note the password is 'password'.  The `-h database` specifies to connect to the 'database' hostname which is mapped to the database container.
 
-+ **Common psql command**
++ **Common psql commands**
 	+ use different database
 	
 		```
@@ -107,14 +115,6 @@ The following is a list of common tasks and how they are performed against the d
 		```
 		# \q
 		```
-
-+ **Open bash shell in container**
-
-	```
-	$ docker-compose run server bash
-	```
-	
-	Note that 'server' is the name of the container that you want to open the bash shell within.  Any changes made while using this bash shell will be persisted and available to subsequent 'server' containers that are started.
 
 + **Migrate tables**
 
